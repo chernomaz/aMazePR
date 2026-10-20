@@ -1,0 +1,87 @@
+{
+  "protocol_version": "0.1",
+  "producer": {
+    "name": "claude",
+    "version": "unknown"
+  },
+  "change": {
+    "title": "Extract manifest parsing from UI layer",
+    "intent": "Move manifest parsing into a reusable service so IDE and CI consumers can share behavior.",
+    "scope": "Parser extraction, adapter update, and tests.",
+    "non_goals": [
+      "No manifest schema change."
+    ]
+  },
+  "workflow": [
+    {
+      "step": 1,
+      "title": "Review extracted parser",
+      "description": "Check the new parser service and its error model.",
+      "files": [
+        "src/main/kotlin/dev/amazepr/manifest/ManifestParser.kt"
+      ]
+    },
+    {
+      "step": 2,
+      "title": "Review UI adapter",
+      "description": "Check that the PyCharm UI now calls the parser service instead of parsing JSON directly.",
+      "files": [
+        "src/main/kotlin/dev/amazepr/ui/ManifestPanel.kt"
+      ]
+    },
+    {
+      "step": 3,
+      "title": "Review tests",
+      "description": "Confirm parser errors are covered without relying on UI tests.",
+      "files": [
+        "src/test/kotlin/dev/amazepr/manifest/ManifestParserTest.kt"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "src/main/kotlin/dev/amazepr/manifest/ManifestParser.kt",
+      "role": "added",
+      "reason": "Provides a reusable parser for manifest JSON and structured parse errors.",
+      "review_notes": []
+    },
+    {
+      "path": "src/main/kotlin/dev/amazepr/ui/ManifestPanel.kt",
+      "role": "modified",
+      "reason": "Uses the extracted parser instead of owning JSON parsing.",
+      "review_notes": [
+        "Check that user-visible errors remain understandable."
+      ]
+    },
+    {
+      "path": "src/test/kotlin/dev/amazepr/manifest/ManifestParserTest.kt",
+      "role": "added",
+      "reason": "Covers valid manifests and common parse failures.",
+      "review_notes": []
+    }
+  ],
+  "verification": {
+    "commands": [
+      {
+        "command": "./gradlew test",
+        "status": "passed",
+        "evidence": "All tests passed locally."
+      }
+    ],
+    "manual_checks": [
+      "Opened the manifest panel with a valid sample manifest."
+    ],
+    "known_gaps": []
+  },
+  "risks": [
+    {
+      "area": "UI behavior",
+      "risk": "Parser error wording may change what users see in the plugin.",
+      "mitigation": "Keep UI-level mapping tests for common parse errors."
+    }
+  ],
+  "agent_notes": {
+    "assumptions": [],
+    "limitations": []
+  }
+}

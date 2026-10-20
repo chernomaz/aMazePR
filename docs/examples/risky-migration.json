@@ -1,0 +1,100 @@
+{
+  "protocol_version": "0.1",
+  "producer": {
+    "name": "codex",
+    "version": "unknown"
+  },
+  "change": {
+    "title": "Rename manifest role field values",
+    "intent": "Migrate file role values to a smaller fixed vocabulary.",
+    "scope": "Schema, parser compatibility, migration notes, and tests.",
+    "non_goals": [
+      "No UI redesign."
+    ]
+  },
+  "workflow": [
+    {
+      "step": 1,
+      "title": "Review schema change",
+      "description": "Check the new role enum and compatibility notes.",
+      "files": [
+        "docs/manifest.schema.json",
+        "docs/change-manifest-protocol.md"
+      ]
+    },
+    {
+      "step": 2,
+      "title": "Review parser compatibility",
+      "description": "Check how older role values are handled.",
+      "files": [
+        "src/main/kotlin/dev/amazepr/manifest/ManifestParser.kt"
+      ]
+    },
+    {
+      "step": 3,
+      "title": "Review migration tests",
+      "description": "Confirm old and new manifests produce clear results.",
+      "files": [
+        "src/test/kotlin/dev/amazepr/manifest/ManifestParserTest.kt"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "docs/manifest.schema.json",
+      "role": "modified",
+      "reason": "Changes the allowed file role values.",
+      "review_notes": [
+        "This is a protocol-facing change and needs careful review."
+      ]
+    },
+    {
+      "path": "docs/change-manifest-protocol.md",
+      "role": "modified",
+      "reason": "Documents compatibility behavior for role value changes.",
+      "review_notes": []
+    },
+    {
+      "path": "src/main/kotlin/dev/amazepr/manifest/ManifestParser.kt",
+      "role": "modified",
+      "reason": "Reports older role values with actionable errors.",
+      "review_notes": []
+    },
+    {
+      "path": "src/test/kotlin/dev/amazepr/manifest/ManifestParserTest.kt",
+      "role": "modified",
+      "reason": "Adds migration coverage for role values.",
+      "review_notes": []
+    }
+  ],
+  "verification": {
+    "commands": [
+      {
+        "command": "./gradlew test",
+        "status": "passed",
+        "evidence": "All tests passed locally."
+      }
+    ],
+    "manual_checks": [
+      "Validated an old manifest and confirmed the error tells the user how to migrate."
+    ],
+    "known_gaps": [
+      "No automatic migration command exists yet."
+    ]
+  },
+  "risks": [
+    {
+      "area": "Protocol compatibility",
+      "risk": "Existing producers may emit old role values.",
+      "mitigation": "Keep parser errors clear and document the migration path."
+    }
+  ],
+  "agent_notes": {
+    "assumptions": [
+      "Protocol version remains 0.1 during early iteration."
+    ],
+    "limitations": [
+      "The example does not include a full migration command design."
+    ]
+  }
+}

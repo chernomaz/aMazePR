@@ -1,0 +1,73 @@
+{
+  "protocol_version": "0.1",
+  "producer": {
+    "name": "codex",
+    "version": "unknown"
+  },
+  "change": {
+    "title": "Fix manifest validation for missing workflow files",
+    "intent": "Make the verifier report workflow steps that reference files outside the manifest.",
+    "scope": "Verifier logic and unit tests.",
+    "non_goals": [
+      "No UI rendering changes."
+    ]
+  },
+  "workflow": [
+    {
+      "step": 1,
+      "title": "Review validation rule",
+      "description": "Check the rule that compares workflow file references with manifest file entries.",
+      "files": [
+        "src/main/kotlin/dev/amazepr/manifest/ManifestVerifier.kt"
+      ]
+    },
+    {
+      "step": 2,
+      "title": "Review regression tests",
+      "description": "Confirm that invalid workflow references now fail verification.",
+      "files": [
+        "src/test/kotlin/dev/amazepr/manifest/ManifestVerifierTest.kt"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "src/main/kotlin/dev/amazepr/manifest/ManifestVerifier.kt",
+      "role": "modified",
+      "reason": "Adds a check for workflow file references that are not present in the manifest file list.",
+      "review_notes": [
+        "Verify that deleted files are still allowed when listed in the files section."
+      ]
+    },
+    {
+      "path": "src/test/kotlin/dev/amazepr/manifest/ManifestVerifierTest.kt",
+      "role": "modified",
+      "reason": "Adds regression coverage for invalid workflow file references.",
+      "review_notes": []
+    }
+  ],
+  "verification": {
+    "commands": [
+      {
+        "command": "./gradlew test",
+        "status": "passed",
+        "evidence": "All tests passed locally."
+      }
+    ],
+    "manual_checks": [],
+    "known_gaps": []
+  },
+  "risks": [
+    {
+      "area": "Verifier strictness",
+      "risk": "Older manifests may include workflow-only files that are not listed in files.",
+      "mitigation": "The verifier reports a clear warning before this becomes a hard error."
+    }
+  ],
+  "agent_notes": {
+    "assumptions": [
+      "The default manifest path is .change-manifest/manifest.json."
+    ],
+    "limitations": []
+  }
+}

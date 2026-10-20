@@ -1,0 +1,36 @@
+name: Verify
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  manifest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run tests
+        run: python -m unittest discover -s tests
+
+      - name: Verify repository manifest
+        run: python tools/change_manifest_verify.py --manifest .change-manifest/manifest.json --skip-diff
+
+      - name: Render repository walkthrough
+        run: python tools/change_manifest_walkthrough.py --manifest .change-manifest/manifest.json --skip-diff --output walkthrough.md
+
+      - name: Verify examples
+        shell: bash
+        run: |
+          for manifest in docs/examples/*.json; do
+            python tools/change_manifest_verify.py --manifest "$manifest" --skip-diff
+          done

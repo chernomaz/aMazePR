@@ -1,0 +1,89 @@
+{
+  "protocol_version": "0.1",
+  "producer": {
+    "name": "codex",
+    "version": "unknown"
+  },
+  "change": {
+    "title": "Add manifest walkthrough panel",
+    "intent": "Render the change manifest as an ordered PR review walkthrough in PyCharm.",
+    "scope": "Plugin UI, manifest view model, and UI tests.",
+    "non_goals": [
+      "No CI command-line verifier in this change."
+    ]
+  },
+  "workflow": [
+    {
+      "step": 1,
+      "title": "Review view model",
+      "description": "Check how manifest data becomes UI sections and warnings.",
+      "files": [
+        "src/main/kotlin/dev/amazepr/ui/ManifestWalkthroughModel.kt"
+      ]
+    },
+    {
+      "step": 2,
+      "title": "Review panel rendering",
+      "description": "Check layout, empty states, and warning display.",
+      "files": [
+        "src/main/kotlin/dev/amazepr/ui/ManifestWalkthroughPanel.kt"
+      ]
+    },
+    {
+      "step": 3,
+      "title": "Review UI tests",
+      "description": "Confirm walkthrough sections render from the sample manifest.",
+      "files": [
+        "src/test/kotlin/dev/amazepr/ui/ManifestWalkthroughPanelTest.kt"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "src/main/kotlin/dev/amazepr/ui/ManifestWalkthroughModel.kt",
+      "role": "added",
+      "reason": "Maps manifest fields to review walkthrough sections.",
+      "review_notes": []
+    },
+    {
+      "path": "src/main/kotlin/dev/amazepr/ui/ManifestWalkthroughPanel.kt",
+      "role": "added",
+      "reason": "Renders intent, workflow, file notes, risks, and verification status.",
+      "review_notes": [
+        "Check that warnings stay visible near the related section."
+      ]
+    },
+    {
+      "path": "src/test/kotlin/dev/amazepr/ui/ManifestWalkthroughPanelTest.kt",
+      "role": "added",
+      "reason": "Covers panel rendering for a valid manifest.",
+      "review_notes": []
+    }
+  ],
+  "verification": {
+    "commands": [
+      {
+        "command": "./gradlew test",
+        "status": "passed",
+        "evidence": "All tests passed locally."
+      }
+    ],
+    "manual_checks": [
+      "Opened a sample manifest in the plugin panel."
+    ],
+    "known_gaps": [
+      "No screenshot-based UI regression test yet."
+    ]
+  },
+  "risks": [
+    {
+      "area": "Review workflow",
+      "risk": "The walkthrough could hide important diff context if users rely on it alone.",
+      "mitigation": "The panel links each step back to the real changed files."
+    }
+  ],
+  "agent_notes": {
+    "assumptions": [],
+    "limitations": []
+  }
+}

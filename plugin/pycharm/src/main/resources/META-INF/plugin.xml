@@ -1,0 +1,19 @@
+<idea-plugin>
+    <id>dev.amazepr.pycharm</id>
+    <name>aMazePR</name>
+    <vendor>chernomaz</vendor>
+
+    <description>
+        Shows a change-manifest walkthrough for agent-authored pull requests.
+    </description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <diff.DiffExtension implementation="dev.amazepr.plugin.ManifestDiffRangeExtension"/>
+        <toolWindow
+            id="aMazePR"
+            anchor="right"
+            factoryClass="dev.amazepr.plugin.ManifestWalkthroughToolWindowFactory"/>
+    </extensions>
+</idea-plugin>

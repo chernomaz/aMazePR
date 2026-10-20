@@ -218,3 +218,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local build tools installed for this workspace.
+.tools/
+
+# Local IntelliJ Platform Gradle Plugin caches and sandboxes.
+plugin/pycharm/.gradle/
+plugin/pycharm/.intellijPlatform/
+
+# Local IDE project metadata.
+.idea/
