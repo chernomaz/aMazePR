@@ -54,34 +54,102 @@ viewer matures.
 
 ## Build
 
-The plugin builds against a local PyCharm installation.
+Run the following commands from the **repository root**, which contains `README.md`,
+`docs`, and `plugin`.
 
-Default local IDE path:
+### Prerequisites
+
+- JDK 21.
+- Gradle installed separately. This project was built with Gradle 9.8.1.
+- A local PyCharm installation. The tested target is PyCharm Community Edition 2024.3.
+- Git available on `PATH`, because the regression checks create temporary repositories.
+- Internet access on the first build to download Gradle plugin and Maven dependencies.
+
+There is no Gradle wrapper or standalone build script in this repository. The build
+configuration is `plugin/pycharm/build.gradle.kts`. The `.tools` directory is ignored
+by Git and is not supplied by a fresh clone.
+
+The default IDE installation path in the build configuration is:
 
 ```text
 C:/Program Files/JetBrains/PyCharm Community Edition 2024.3
 ```
 
-Build with the local Gradle and JDK installed in the repository workspace:
+### Build From A Fresh Clone
+
+Install the prerequisites, then open PowerShell:
 
 ```powershell
-$env:JAVA_HOME = (Resolve-Path '..\..\.tools\jdk-21').Path
-$env:Path = "$env:JAVA_HOME\bin;$env:Path"
-..\..\.tools\gradle-9.8.1\bin\gradle.bat build
-..\..\.tools\gradle-9.8.1\bin\gradle.bat buildPlugin
+git clone https://github.com/chernomaz/aMazePR.git
+cd aMazePR
 ```
 
-The installable plugin artifact is produced at:
+Set `JAVA_HOME` to your JDK 21 installation. Replace the example path below with your
+actual JDK directory. The Gradle executable must also be available on `PATH`.
+
+```powershell
+$env:JAVA_HOME = 'C:\Path\To\jdk-21'
+$env:Path = "$env:JAVA_HOME\bin;$env:Path"
+java -version
+gradle --version
+gradle -p plugin/pycharm check buildPlugin
+```
+
+`check` runs the standalone regression checks, including file sidebar navigation,
+Git comparisons, and line ranges. `buildPlugin` creates the installable ZIP.
+
+If PyCharm is installed somewhere else, pass its installation directory:
+
+```powershell
+gradle -p plugin/pycharm check buildPlugin '-PlocalIdePath=C:/Path/To/PyCharm'
+```
+
+### Build In The Existing Workspace
+
+On the original development machine, the JDK and Gradle already exist under `.tools`.
+From the repository root, run:
+
+```powershell
+cd D:\ai\amazePR\repo
+$env:JAVA_HOME = (Resolve-Path '.tools\jdk-21').Path
+$env:Path = "$env:JAVA_HOME\bin;$env:Path"
+.\.tools\gradle-9.8.1\bin\gradle.bat -p plugin/pycharm check buildPlugin
+```
+
+### Output And Installation
+
+The output, relative to the repository root, is:
 
 ```text
-plugin/pycharm/build/distributions/amazepr-pycharm-plugin-0.1.1.zip
+plugin/pycharm/build/distributions/amazepr-pycharm-plugin-0.1.2.zip
 ```
 
-To use another local IDE path:
+The versioned plugin JAR is also available at:
+
+```text
+plugin/pycharm/build/libs/amazepr-pycharm-plugin-0.1.2.jar
+```
+
+Use the ZIP for **Install Plugin from Disk**, since it contains the packaged plugin.
+
+For a clean rebuild, add `clean` before the other tasks:
 
 ```powershell
-..\..\.tools\gradle-9.8.1\bin\gradle.bat build -PlocalIdePath="C:/Path/To/PyCharm"
+gradle -p plugin/pycharm clean check buildPlugin
 ```
+
+In PyCharm, open **Settings > Plugins**, open the gear menu, and select
+**Install Plugin from Disk**. Choose the ZIP and restart PyCharm. For this version,
+the installed plugin should show **0.1.2**. Reloading a manifest does not update plugin code.
+
+### Common Build Problems
+
+- **`gradle` is not recognized:** add the installed Gradle `bin` directory to `PATH`,
+  or invoke its `gradle.bat` by full path.
+- **JDK 21 is not found:** check `JAVA_HOME` and `java -version` in the same terminal.
+- **The local IDE directory is missing:** supply `-PlocalIdePath` as shown above.
+- **The old plugin still runs:** install the newly built ZIP and restart the IDE;
+  check the installed plugin version.
 
 ## Next Plugin Steps
 

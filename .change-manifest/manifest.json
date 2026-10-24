@@ -5,11 +5,11 @@
     "version": "unknown"
   },
   "change": {
-    "title": "Test PR: three demo functions",
-    "intent": "Provide a small real PR for trying the aMazePR guided diff viewer.",
-    "scope": "Three independent Python demo functions, a guided review walkthrough, and a renderer regression test that supports changing manifest titles.",
+    "title": "Add three demo functions and package PyCharm plugin 0.1.2",
+    "intent": "Provide a real guided-review demo and distribute version 0.1.2 of the PyCharm plugin with reproducible build and installation instructions.",
+    "scope": "Three Python demo functions, renderer regression coverage, plugin version 0.1.2, versioned JAR and installable ZIP, and updated build documentation.",
     "non_goals": [
-      "No changes to plugin or verifier behavior."
+      "No changes to plugin runtime behavior or verifier rules."
     ]
   },
   "workflow": [
@@ -64,6 +64,24 @@
           "label": "Current manifest title assertion"
         }
       ]
+    },
+    {
+      "step": 5,
+      "title": "Build and install plugin version 0.1.2",
+      "description": "The Gradle version controls the plugin metadata and versioned JAR and ZIP names. The updated documentation explains required tools and fresh-clone setup. Build check and buildPlugin, then install the ZIP in PyCharm and confirm version 0.1.2. The JAR is supplied separately as a build artifact; live installation has not been checked.",
+      "files": [
+        {
+          "path": "plugin/pycharm/build.gradle.kts",
+          "line": 6,
+          "end_line": 7,
+          "label": "Plugin version"
+        },
+        "plugin/pycharm/README.md",
+        "README.md",
+        "docs/pycharm-plugin.md",
+        "plugin/pycharm/build/libs/amazepr-pycharm-plugin-0.1.2.jar",
+        "plugin/pycharm/build/distributions/amazepr-pycharm-plugin-0.1.2.zip"
+      ]
     }
   ],
   "files": [
@@ -104,6 +122,42 @@
       "review_notes": [
         "The synthetic Line target test still checks a fixed expected heading, independently of the repository manifest."
       ]
+    },
+    {
+      "path": "README.md",
+      "role": "modified",
+      "reason": "Include fresh-clone build guidance and link to the version 0.1.2 plugin package.",
+      "review_notes": []
+    },
+    {
+      "path": "plugin/pycharm/README.md",
+      "role": "modified",
+      "reason": "Document prerequisites, build commands, installation troubleshooting, and the versioned JAR and ZIP paths.",
+      "review_notes": []
+    },
+    {
+      "path": "docs/pycharm-plugin.md",
+      "role": "modified",
+      "reason": "Update the plugin artifact path to version 0.1.2.",
+      "review_notes": []
+    },
+    {
+      "path": "plugin/pycharm/build.gradle.kts",
+      "role": "modified",
+      "reason": "Set the plugin version to 0.1.2 so packaged metadata and output filenames agree.",
+      "review_notes": []
+    },
+    {
+      "path": "plugin/pycharm/build/libs/amazepr-pycharm-plugin-0.1.2.jar",
+      "role": "added",
+      "reason": "Supply the built version 0.1.2 plugin JAR requested for this update.",
+      "review_notes": []
+    },
+    {
+      "path": "plugin/pycharm/build/distributions/amazepr-pycharm-plugin-0.1.2.zip",
+      "role": "added",
+      "reason": "Supply the version 0.1.2 plugin ZIP for installation through PyCharm.",
+      "review_notes": []
     }
   ],
   "verification": {
@@ -117,6 +171,11 @@
         "command": "python - (inline demo smoke checks)",
         "status": "passed",
         "evidence": "Named and blank greetings; clamping below, inside, above and at bounds; equal and reversed bounds; slug punctuation and repeated separators all passed."
+      },
+      {
+        "command": "gradle -p plugin/pycharm check buildPlugin",
+        "status": "passed",
+        "evidence": "Gradle build succeeded; all 72 diff navigation checks passed. Packaged JAR metadata reports 0.1.2, and ZIP contains the identical JAR."
       }
     ],
     "manual_checks": [],
@@ -136,7 +195,7 @@
       "The requested PR is a demonstration for guided diff review."
     ],
     "limitations": [
-      "Existing uncommitted README changes are excluded from this PR."
+      "Live PyCharm installation and UI behavior have not been checked."
     ]
   }
 }

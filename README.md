@@ -69,6 +69,19 @@ guided walkthrough. File actions select manifest line ranges in the diff. Choose
 **Working tree** for local changes or **Pull request** and a base branch for committed
 branch changes.
 
+For prerequisites, fresh-clone setup, build commands, ZIP output, and installation,
+see the [plugin build instructions](plugin/pycharm/README.md#build).
+
+With JDK 21, Gradle, Git, and a local PyCharm installation available, run from the
+repository root:
+
+```powershell
+gradle -p plugin/pycharm check buildPlugin
+```
+
+The ZIP is written to
+`plugin/pycharm/build/distributions/amazepr-pycharm-plugin-0.1.2.zip`.
+
 ## Run Tests
 
 ```bash

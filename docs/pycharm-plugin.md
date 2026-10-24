@@ -86,7 +86,7 @@ $env:Path = "$env:JAVA_HOME\bin;$env:Path"
 Installable artifact:
 
 ```text
-plugin/pycharm/build/distributions/amazepr-pycharm-plugin-0.1.1.zip
+plugin/pycharm/build/distributions/amazepr-pycharm-plugin-0.1.2.zip
 ```
 
 ## Next Steps
