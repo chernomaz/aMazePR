@@ -5,666 +5,84 @@
     "version": "unknown"
   },
   "change": {
-    "title": "Bootstrap open change-manifest protocol and PyCharm viewer",
-    "intent": "Let the coding agent that made a change explain its intent and review path once, in a portable JSON manifest. A verifier checks structural facts and file coverage; PyCharm and Markdown consumers present that explanation with links back to the actual code.",
-    "scope": "Initial protocol 0.1, schema, reusable producer skill, four illustrative manifests, Python verifier and Markdown renderer, Python CI checks, and a local-build PyCharm viewer. The viewer reads JSON, groups every step file into a navigable diff chain, supports local and merge-base PR comparisons, and selects inclusive manifest line ranges. This manifest describes the complete uncommitted repository foundation, including the later diff-navigation fixes.",
+    "title": "Test PR: three demo functions",
+    "intent": "Provide a small real PR for trying the aMazePR guided diff viewer.",
+    "scope": "Three independent Python demo functions and their three-step review walkthrough.",
     "non_goals": [
-      "No remote PR discovery, automatic fetch, or GitHub App implementation.",
-      "No full JSON Schema engine or shared Python/Java validation library.",
-      "No claim that validation proves intent, explanation quality, or runtime correctness.",
-      "No marketplace release, portable IDE download setup, or automated live UI tests."
+      "No changes to plugin or verifier behavior."
     ]
   },
   "workflow": [
     {
       "step": 1,
-      "title": "Establish what the manifest promises",
-      "description": "This repository introduces the producer-to-consumer contract: the agent writes .change-manifest/manifest.json after changing code, and consumers use that record to guide review. The schema fixes the required sections and file-role vocabulary. Workflow references can be plain paths or objects with a path, one-based line, optional inclusive end_line, and label. This allows an IDE to open the relevant code without asking another agent to rediscover the review path.\n\nCompare the documented contract with the schema. Confirm every workflow path can be resolved through the file inventory, and that unknown fields remain allowed. Review intent as an agent explanation, not as a verified fact. Protocol version 0.1 is an initial contract; the Python verifier currently accepts exactly 0.1 even though the prose discusses broader version compatibility.",
+      "title": "Normalize a greeting",
+      "description": "greet trims surrounding whitespace and substitutes World for blank input before formatting the greeting. Check that a named and a blank greeting have predictable results.",
       "files": [
         {
-          "path": "docs/change-manifest-protocol.md",
-          "label": "Producer and consumer contract",
-          "line": 56
-        },
-        {
-          "path": "docs/manifest.schema.json",
-          "label": "Required top-level sections",
-          "line": 7
-        },
-        {
-          "path": "docs/manifest.schema.json",
-          "label": "Workflow path and inclusive range fields",
-          "line": 68
+          "path": "demo/greeting.py",
+          "line": 4,
+          "end_line": 6,
+          "label": "Normalize a greeting"
         }
       ]
     },
     {
       "step": 2,
-      "title": "Make the producing agent supply the missing explanation",
-      "description": "The skill is the source of authoring guidance for Codex or Claude. A renderer cannot infer why a change was made from a filename list, so the updated guidance puts substantive explanations into workflow descriptions, file reasons, and review notes. Each step must describe changed behavior, motivation, the relationship between files, and a concrete review check. A short before/after example shows why \"review these files\" is insufficient.\n\nVerify that the guidance demands evidence rather than word count: code targets come from inspected source, command results come from observed runs, and hypothetical samples are kept separate from repository facts. The final quality check asks whether a step still explains a useful behavior without its file list. The skill remains in this repository; this change does not install it globally.",
+      "title": "Clamp an integer",
+      "description": "clamp returns the nearest inclusive bound for an out-of-range integer and leaves in-range values unchanged. Reversed bounds raise ValueError so callers cannot silently use an invalid interval. Check boundary, equal-bound, and error cases.",
       "files": [
         {
-          "path": "skills/pr-manifest-skill/SKILL.md",
-          "label": "Quality rules and concrete example",
-          "line": 65
-        },
-        {
-          "path": "skills/pr-manifest-skill/SKILL.md",
-          "label": "Final author review before delivery",
-          "line": 241
+          "path": "demo/numbers.py",
+          "line": 4,
+          "end_line": 8,
+          "label": "Clamp an integer"
         }
       ]
     },
     {
       "step": 3,
-      "title": "Trace structural validation and Git coverage",
-      "description": "The Python verifier loads JSON, validates required fields and supported values, rejects duplicate file paths and step numbers, and checks each workflow path against the inventory. Without --base it combines unstaged, staged, and non-ignored untracked paths, which matters here because most of this foundation is still untracked. validate_diff reports missing or extra inventory paths as warnings; --warnings-as-errors makes those warnings fail the command. JSON output exposes the same diagnostics for tool consumers.\n\nReview the boundary between these checks and a full schema engine. The implementation does not enforce every JSON Schema constraint or the correctness of prose and target line ranges. Also inspect --base: it compares the supplied revision directly with the working tree; it does not use the plugin PR mode's merge-base-to-HEAD semantics. The tests cover listed and unlisted workflow references, duplicates, protocol rejection, diff coverage, and diagnostic serialization.",
+      "title": "Create an ASCII slug",
+      "description": "slugify lowercases input, replaces consecutive non-ASCII-alphanumeric characters with one hyphen, and removes edge hyphens. Punctuation-only input produces an empty string; Unicode transliteration is outside this demo. Check repeated separators and empty results.",
       "files": [
         {
-          "path": "tools/change_manifest_verify.py",
-          "label": "Structural rules",
-          "line": 168,
-          "end_line": 375
-        },
-        {
-          "path": "tools/change_manifest_verify.py",
-          "label": "Collect staged, unstaged, and untracked changes",
-          "line": 412,
-          "end_line": 438
-        },
-        {
-          "path": "docs/verifier-rules.md",
-          "label": "Diagnostic severity and contract",
-          "line": 26
-        },
-        {
-          "path": "docs/verifier-cli.md",
-          "label": "CLI options and JSON diagnostics"
-        },
-        {
-          "path": "tests/test_change_manifest_verify.py",
-          "label": "Positive and negative rule checks",
-          "line": 79
-        }
-      ]
-    },
-    {
-      "step": 4,
-      "title": "Follow the explanation into generated Markdown",
-      "description": "The renderer calls the verifier, then copies the manifest's intent, scope, workflow descriptions, file reasons, verification evidence, and risks into Markdown sections. render_workflow preserves each file label and line range. It does not call an AI model or invent a deeper explanation; a thin manifest produces a thin walkthrough. Richer descriptions therefore belong in JSON and flow into both this generated file and the plugin.\n\nInspect render_workflow and render_workflow_file_reference to confirm the review narrative and inclusive ranges survive formatting. Diagnostics appear near the top, and errors make the CLI return a failure. The tests cover section output, diagnostic placement, and labeled line ranges. Regenerate the walkthrough after editing the manifest rather than maintaining a separate explanation in Markdown.",
-      "files": [
-        {
-          "path": "tools/change_manifest_walkthrough.py",
-          "label": "Render the authored workflow",
-          "line": 54,
-          "end_line": 98
-        },
-        {
-          "path": "tools/change_manifest_walkthrough.py",
-          "label": "Validate before rendering",
-          "line": 221,
-          "end_line": 238
-        },
-        {
-          "path": "docs/walkthrough-rendering.md",
-          "label": "Rendering and failure behavior"
-        },
-        {
-          "path": "tests/test_change_manifest_walkthrough.py",
-          "label": "Sections, diagnostics, and line reference coverage",
-          "line": 37
-        }
-      ]
-    },
-    {
-      "step": 5,
-      "title": "Separate illustrative manifests from this real change",
-      "description": "The four sample files demonstrate different review decisions: an invalid workflow reference for a bug fix, parser extraction for a refactor, panel rendering for a feature, and role-value compatibility for a migration. Their Kotlin paths and Gradle test evidence are illustrative; those implementations are not present in this repository. --skip-diff allows their structure to be checked without treating fictional paths as this Git change.\n\nThis PR's manifest is the real producer output, and walkthrough.md is its generated representation. Compare the two to confirm the same explanations, file coverage, and verification limits appear. Sample validity does not establish that sample tests ran or that every explanatory statement is consistent: the bug-fix sample, for example, describes a warning mitigation while its workflow-reference rule is an error. Treat the examples as format illustrations requiring editorial review.",
-      "files": [
-        {
-          "path": "docs/examples/bug-fix.json",
-          "label": "Bug-fix illustration"
-        },
-        {
-          "path": "docs/examples/refactor.json",
-          "label": "Refactor illustration"
-        },
-        {
-          "path": "docs/examples/feature.json",
-          "label": "Feature illustration"
-        },
-        {
-          "path": "docs/examples/risky-migration.json",
-          "label": "Compatibility illustration"
-        },
-        {
-          "path": ".change-manifest/manifest.json",
-          "label": "Actual repository change record"
-        },
-        {
-          "path": ".change-manifest/walkthrough.md",
-          "label": "Generated representation of this record"
-        }
-      ]
-    },
-    {
-      "step": 6,
-      "title": "Load JSON and turn it into walkthrough data",
-      "description": "The active tool-window view calls loadManifestOnly and passes the JSON to ManifestJsonParser. The parser extracts the change title and intent, workflow steps, file references, and a limited set of diagnostics. ParsedWalkthrough and WalkthroughStep carry that data to the view; WalkthroughContent represents loaded, missing, and read-error states. The loader and Markdown parser also retain older Markdown paths, but the current Walkthrough action reads JSON directly.\n\nTrace a workflow reference from JSON into WorkflowFileReference and then into a step. Check missing content and duplicate or unlisted-path diagnostics. Do not treat an empty plugin diagnostic list as full protocol validation: the Java parser does not implement all Python rules, such as the supported-version check. The old Markdown parser also does not fully handle labeled range references emitted by the current renderer.",
-      "files": [
-        {
-          "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/ManifestWalkthroughLoader.java",
-          "label": "Active JSON-only loading path",
-          "line": 40
-        },
-        {
-          "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/ManifestJsonParser.java",
-          "label": "Parse file targets and labels",
-          "line": 101
-        },
-        {
-          "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/ParsedWalkthrough.java",
-          "label": "Parsed result for the view"
-        },
-        {
-          "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/WalkthroughStep.java",
-          "label": "Step data and ordered references"
-        },
-        {
-          "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/WalkthroughContent.java",
-          "label": "Loaded, missing, and error content states"
-        },
-        {
-          "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/WalkthroughMarkdownParser.java",
-          "label": "Legacy Markdown parsing path",
-          "line": 56
-        },
-        {
-          "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/ManifestPaths.java",
-          "label": "Shared manifest and walkthrough paths"
-        }
-      ]
-    },
-    {
-      "step": 7,
-      "title": "Keep every step file available in the diff viewer",
-      "description": "A workflow step can contain several file targets. The earlier Open diff action selected only its first file, so the other references were absent from that comparison. The view now passes the complete ordered list and a selected index to ManifestDiffOpener. Open step diff starts at index zero; clicking a particular file retains the full group and starts at that file. createChain makes one lazy DiffRequestProducer per reference, including separate targets in the same file.\n\nFollow the view's file actions into createChain. Confirm the chain length equals the step reference count, file order is preserved, and a click on the last reference selects the last comparison. StepDiffDialog embeds the native diff processor alongside StepDiffPanel, which permanently lists every target. Clicking the list or using Previous file and Next file calls setCurrentRequest with the selected index. Processor navigation synchronizes the list without recursively loading again. Each producer carries its own range hints and reports its own loading error. The sidebar exposes the group size and selected position, independent of which native toolbar actions are visible. It shows one selected file diff on the right and keeps all other targets directly selectable on the left.\n\nLong explanations previously exceeded the fixed card height and were clipped. The card now sits in a vertical scroll pane; its Scrollable implementation tracks viewport width so text wraps and the card can grow in height. The navigation controls remain outside the scrolling area. Verify that a long step can be scrolled through its final paragraph and file actions at a narrow window width, and that switching steps returns the card to the top.\n\nInspection of the locally installed 0.1.0 JAR found no diff-chain implementation, explaining why that copy still opened only one file. The packaged version is now 0.1.1. Install the new ZIP and restart PyCharm; reloading the manifest cannot update plugin classes.",
-      "files": [
-        {
-          "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/ManifestWalkthroughView.java",
-          "label": "File buttons and full-step action",
-          "line": 256,
-          "end_line": 301
-        },
-        {
-          "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/ManifestWalkthroughView.java",
-          "label": "Pass all references and selected index",
-          "line": 350,
-          "end_line": 376
-        },
-        {
-          "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/ManifestDiffOpener.java",
-          "label": "Create one producer per step target",
-          "line": 36
-        },
-        {
-          "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/WorkflowFileReference.java",
-          "label": "Keep ranges and labels with each target"
-        },
-        {
-          "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/ManifestWalkthroughView.java",
-          "label": "Scrollable card and fixed navigation",
-          "line": 167,
-          "end_line": 204
-        },
-        {
-          "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/StepDiffPanel.java",
-          "label": "StepDiffPanel",
-          "line": 20
-        },
-        {
-          "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/StepDiffDialog.java",
-          "label": "StepDiffDialog",
-          "line": 12
-        }
-      ]
-    },
-    {
-      "step": 8,
-      "title": "Choose the correct content for local and PR review",
-      "description": "GitDiffComparison resolves HEAD to a commit before reading a file. Working tree mode uses that commit on the left and the local file on the right, so it includes local modifications and untracked files. Pull request mode resolves the entered base reference, finds its merge base with HEAD, and compares that ancestor with committed HEAD. If the target branch advanced independently, those target-only changes are excluded; local edits are excluded as well.\n\nReview the rename pairing and the distinction between an empty file and a missing side. Added files get an empty old side, deleted files get an empty new side, and Git-detected renames retain old-path content. Missing bases, unrelated histories, unsupported file kinds, read failures, and timeouts produce errors. The plugin uses local references and does not fetch them. Lazy producers resolve commits separately, so keep the checkout stable while moving through a group; a group-wide snapshot is not pinned.",
-      "files": [
-        {
-          "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/GitDiffComparison.java",
-          "label": "Resolve snapshots and pair renamed paths",
-          "line": 13,
-          "end_line": 61
-        },
-        {
-          "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/GitDiffComparison.java",
-          "label": "Distinguish absent content and Git failures",
-          "line": 66
-        },
-        {
-          "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/ManifestWalkthroughView.java",
-          "label": "Persist comparison mode and base",
-          "line": 73,
-          "end_line": 144
-        }
-      ]
-    },
-    {
-      "step": 9,
-      "title": "Reveal and select the intended code range",
-      "description": "The opener adds aMazePR-specific target data to a read-only side-by-side diff request. ManifestDiffRangeExtension handles only requests with that key. After diff calculation, it converts the one-based inclusive range to valid editor lines, expands folds that intersect the range, selects its text, and scrolls the caret into view. Deleted files target the old side; other files target the new side. Opening the target no longer navigates a separate source editor and takes focus away from the diff.\n\nCheck the extension registration, side choice, and end-line conversion together. DiffLineRange clamps targets past the file end and prevents a reversed range from selecting backwards. These bounds checks do not detect a stale manifest that points to valid but unrelated lines. The extension runs its initial selection once per viewer; live folding, selection visibility, and focus still need a PyCharm check.",
-      "files": [
-        {
-          "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/ManifestDiffRangeExtension.java",
-          "label": "Apply the range after rediff",
-          "line": 19
-        },
-        {
-          "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/DiffLineRange.java",
-          "label": "Inclusive range conversion and clamping",
-          "line": 6
-        },
-        {
-          "path": "plugin/pycharm/src/main/resources/META-INF/plugin.xml",
-          "label": "Register tool window and range extension",
-          "line": 12
-        }
-      ]
-    },
-    {
-      "step": 10,
-      "title": "Check what the automated plugin tests establish",
-      "description": "The standalone diffNavigationTest task runs dependency-free test logic with the IDE compile classpath. It reads this actual manifest and builds native diff chains for every non-empty step, asserting full reference counts, order, and selected indices. It also checks that repeated targets in one file remain separate. Temporary Git repositories exercise an advanced target branch, exclusion of local edits from PR mode, local changes, additions, deletions, renames, empty files, large output, invalid references, and unrelated history.\n\nRead the assertions alongside the implementation rather than relying on a build label. The source set is separate from framework tests so Gradle check runs the standalone checks without a false test-discovery failure. These tests do not instantiate the live tool window, verify toolbar appearance, or prove visual selection and focus. The local IDE and toolchain requirements remain in the build and plugin README.\n\nSidebar tests construct the real StepDiffPanel on the Swing event dispatch thread for every manifest step. They assert full list membership, initial selection, clicks and Previous/Next callbacks, disabled boundary buttons, and no callback recursion during processor sync. They do not instantiate the live IDE diff processor or prove installed-plugin behavior.",
-      "files": [
-        {
-          "path": "plugin/pycharm/src/diffTest/java/dev/amazepr/plugin/DiffNavigationTest.java",
-          "label": "Assert complete native chains for every manifest step",
-          "line": 105,
-          "end_line": 132
-        },
-        {
-          "path": "plugin/pycharm/src/diffTest/java/dev/amazepr/plugin/DiffNavigationTest.java",
-          "label": "Git scenarios and range checks",
-          "line": 16,
-          "end_line": 99
-        },
-        {
-          "path": "plugin/pycharm/build.gradle.kts",
-          "label": "Wire standalone checks into Gradle check",
-          "line": 32
-        },
-        {
-          "path": "plugin/pycharm/README.md",
-          "label": "Usage, build prerequisites, and current gaps"
-        }
-      ]
-    },
-    {
-      "step": 11,
-      "title": "Reproduce the loop and identify delivery limits",
-      "description": "The README and full-loop guide connect authoring, strict verification, Markdown generation, and IDE review. The GitHub Actions workflow runs Python tests, verifies manifest structure with --skip-diff, renders the walkthrough, and checks the examples. It does not enforce PR diff coverage there and does not build or run the Java plugin. The local Gradle setup uses the installed PyCharm 2024.3 and workspace JDK/Gradle; the tool-window factory attaches the viewer to the IDE.\n\nCheck the commands against the actual build paths and the recorded evidence below. The implementation plan contains older scaffold descriptions and is not an accurate completion checklist. Local tools and IDE caches are ignored. No commit or PR publication is part of this manifest refresh; install the packaged plugin separately to assess the remaining UI checks.",
-      "files": [
-        {
-          "path": "README.md",
-          "label": "Project entry point and commands"
-        },
-        {
-          "path": "docs/full-loop.md",
-          "label": "Author-to-consumer loop"
-        },
-        {
-          "path": ".github/workflows/verify.yml",
-          "label": "Actual Python-only CI checks"
-        },
-        {
-          "path": "docs/pycharm-plugin.md",
-          "label": "Plugin modes and current limits"
-        },
-        {
-          "path": "docs/implementation-plan.md",
-          "label": "Roadmap with older scaffold descriptions"
-        },
-        {
-          "path": "plugin/pycharm/settings.gradle.kts",
-          "label": "Standalone plugin project"
-        },
-        {
-          "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/ManifestWalkthroughToolWindowFactory.java",
-          "label": "Create the IDE view"
-        },
-        {
-          "path": ".gitignore",
-          "label": "Keep local tools and caches out of source"
+          "path": "demo/text.py",
+          "line": 6,
+          "end_line": 8,
+          "label": "Create an ASCII slug"
         }
       ]
     }
   ],
   "files": [
     {
-      "path": ".gitignore",
-      "role": "modified",
-      "reason": "Excludes local build tools, IDE state, and generated caches so the initial source change contains reviewable inputs.",
+      "path": "demo/greeting.py",
+      "role": "added",
+      "reason": "greet trims surrounding whitespace and substitutes World for blank input before formatting the greeting. Check that a named and a blank greeting have predictable results.",
       "review_notes": []
     },
     {
-      "path": "README.md",
+      "path": "demo/numbers.py",
       "role": "added",
-      "reason": "Connects protocol authoring, verification, rendering, and plugin use so a reviewer can reproduce the local loop.",
+      "reason": "clamp returns the nearest inclusive bound for an out-of-range integer and leaves in-range values unchanged. Reversed bounds raise ValueError so callers cannot silently use an invalid interval. Check boundary, equal-bound, and error cases.",
       "review_notes": []
     },
     {
-      "path": "docs/change-manifest-protocol.md",
+      "path": "demo/text.py",
       "role": "added",
-      "reason": "Defines the common JSON contract and separates agent intent from facts that tools can verify.",
-      "review_notes": [
-        "Compare version guidance with the exact 0.1 acceptance implemented by the verifier."
-      ]
-    },
-    {
-      "path": "docs/manifest.schema.json",
-      "role": "added",
-      "reason": "Defines required sections, file roles, and optional line-range references for interoperable producers.",
-      "review_notes": [
-        "The Python verifier implements a subset of these constraints; schema validity and narrative quality are separate checks."
-      ]
-    },
-    {
-      "path": "docs/verifier-rules.md",
-      "role": "added",
-      "reason": "Names diagnostics and their severity so CLI and IDE consumers can interpret failures consistently.",
+      "reason": "slugify lowercases input, replaces consecutive non-ASCII-alphanumeric characters with one hyphen, and removes edge hyphens. Punctuation-only input produces an empty string; Unicode transliteration is outside this demo. Check repeated separators and empty results.",
       "review_notes": []
-    },
-    {
-      "path": "docs/verifier-cli.md",
-      "role": "added",
-      "reason": "Documents command options and structured diagnostics for local and CI use.",
-      "review_notes": [
-        "The CLI --base comparison includes the working tree; it differs from plugin PR mode."
-      ]
-    },
-    {
-      "path": "docs/walkthrough-rendering.md",
-      "role": "added",
-      "reason": "Explains how authored JSON becomes Markdown and how diagnostics affect renderer output.",
-      "review_notes": []
-    },
-    {
-      "path": "docs/full-loop.md",
-      "role": "added",
-      "reason": "Gives commands to reproduce the producer, verifier, renderer, and IDE consumer sequence.",
-      "review_notes": []
-    },
-    {
-      "path": "docs/implementation-plan.md",
-      "role": "added",
-      "reason": "Records the original phases for protocol and consumer work.",
-      "review_notes": [
-        "Some scaffold and status notes predate the current implementation; use source and verification evidence for current behavior."
-      ]
-    },
-    {
-      "path": "docs/pycharm-plugin.md",
-      "role": "added",
-      "reason": "Documents multi-file navigation, local versus PR comparisons, range targets, and the remaining UI checks.",
-      "review_notes": []
-    },
-    {
-      "path": "docs/examples/bug-fix.json",
-      "role": "added",
-      "reason": "Illustrates a bug-fix review workflow and the protocol shape without requiring the hypothetical implementation in this repository.",
-      "review_notes": [
-        "Sample paths and claimed test outcomes are illustrative, not evidence for this PR."
-      ]
-    },
-    {
-      "path": "docs/examples/refactor.json",
-      "role": "added",
-      "reason": "Illustrates a refactor review workflow and the protocol shape without requiring the hypothetical implementation in this repository.",
-      "review_notes": [
-        "Sample paths and claimed test outcomes are illustrative, not evidence for this PR."
-      ]
-    },
-    {
-      "path": "docs/examples/feature.json",
-      "role": "added",
-      "reason": "Illustrates a feature review workflow and the protocol shape without requiring the hypothetical implementation in this repository.",
-      "review_notes": [
-        "Sample paths and claimed test outcomes are illustrative, not evidence for this PR."
-      ]
-    },
-    {
-      "path": "docs/examples/risky-migration.json",
-      "role": "added",
-      "reason": "Illustrates a risky-migration review workflow and the protocol shape without requiring the hypothetical implementation in this repository.",
-      "review_notes": [
-        "Sample paths and claimed test outcomes are illustrative, not evidence for this PR."
-      ]
-    },
-    {
-      "path": "skills/pr-manifest-skill/SKILL.md",
-      "role": "added",
-      "reason": "Teaches agents to produce an evidence-based review explanation using the fields current consumers already read.",
-      "review_notes": [
-        "Check behavior, motivation, relationships between files, and reviewer checks in every workflow description.",
-        "Keep output quality guidance distinct from claims that automated validation proves prose."
-      ]
-    },
-    {
-      "path": "tools/change_manifest_verify.py",
-      "role": "added",
-      "reason": "Checks protocol structure and workflow membership, compares the inventory with Git paths, and returns text or JSON diagnostics.",
-      "review_notes": [
-        "Without a base, staged, unstaged, and untracked files are combined.",
-        "It is a hand-written rule set, not a full schema engine or an assessment of explanation quality."
-      ]
-    },
-    {
-      "path": "tools/change_manifest_walkthrough.py",
-      "role": "added",
-      "reason": "Formats the manifest narrative and diagnostics as Markdown without adding inferred explanations.",
-      "review_notes": [
-        "Compare generated step descriptions, labels, and line ranges with their JSON source."
-      ]
-    },
-    {
-      "path": "tests/test_change_manifest_verify.py",
-      "role": "added",
-      "reason": "Checks valid inputs and diagnostic behavior for malformed JSON, protocol versions, duplicate paths, workflow references, and diff coverage.",
-      "review_notes": []
-    },
-    {
-      "path": "tests/test_change_manifest_walkthrough.py",
-      "role": "added",
-      "reason": "Checks that the renderer preserves main sections, leading diagnostics, and labeled line targets.",
-      "review_notes": [
-        "These assertions establish formatting behavior, not the quality of the authored review narrative."
-      ]
-    },
-    {
-      "path": ".github/workflows/verify.yml",
-      "role": "added",
-      "reason": "Runs Python tests, structural manifest checks, Markdown generation, and illustrative-example verification on pushes and PRs.",
-      "review_notes": [
-        "--skip-diff skips file coverage in CI; Java plugin checks are local only."
-      ]
     },
     {
       "path": ".change-manifest/manifest.json",
-      "role": "added",
-      "reason": "Applies the producer skill to this complete repository foundation with a concrete review path and explicit validation limits.",
-      "review_notes": [
-        "Verify source targets and factual claims against the referenced code; successful structural verification is insufficient."
-      ]
+      "role": "modified",
+      "reason": "Describe this demo PR and point each review step to its function.",
+      "review_notes": []
     },
     {
       "path": ".change-manifest/walkthrough.md",
-      "role": "added",
-      "reason": "Publishes the renderer output for this manifest so reviewers can read the same narrative outside PyCharm.",
-      "review_notes": [
-        "Regenerate from JSON; do not maintain a separate explanation in this generated file."
-      ]
-    },
-    {
-      "path": "plugin/pycharm/README.md",
-      "role": "added",
-      "reason": "Explains installation artifact paths, whole-step file navigation, comparison modes, and local regression commands.",
+      "role": "modified",
+      "reason": "Render the demo manifest as a readable Markdown walkthrough.",
       "review_notes": []
-    },
-    {
-      "path": "plugin/pycharm/settings.gradle.kts",
-      "role": "added",
-      "reason": "Names the standalone plugin build so it can run independently of the Python tools.",
-      "review_notes": []
-    },
-    {
-      "path": "plugin/pycharm/build.gradle.kts",
-      "role": "added",
-      "reason": "Builds against the local IDE and makes the standalone Git, chain, and range checks part of Gradle check.",
-      "review_notes": [
-        "The local IDE path and workspace toolchain still limit portability; CI does not execute this build.",
-        "Plugin version is 0.1.1 so the installed package can be distinguished from older 0.1.0 builds."
-      ]
-    },
-    {
-      "path": "plugin/pycharm/src/main/resources/META-INF/plugin.xml",
-      "role": "added",
-      "reason": "Registers both the tool-window factory and the diff-range extension with the IntelliJ Platform.",
-      "review_notes": [
-        "The existing plugin ID produces a product-name warning in structure verification."
-      ]
-    },
-    {
-      "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/ManifestPaths.java",
-      "role": "added",
-      "reason": "Keeps the default manifest and generated Markdown paths consistent across loader calls.",
-      "review_notes": []
-    },
-    {
-      "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/ManifestWalkthroughLoader.java",
-      "role": "added",
-      "reason": "Reads JSON or legacy Markdown and represents missing and read-error states for the view.",
-      "review_notes": [
-        "The active walkthrough uses loadManifestOnly; retained Markdown fallback is not the active path."
-      ]
-    },
-    {
-      "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/ManifestJsonParser.java",
-      "role": "added",
-      "reason": "Maps JSON into walkthrough models and reports missing fields, duplicates, and workflow paths absent from the inventory.",
-      "review_notes": [
-        "Do not equate its limited diagnostic set with the Python verifier or complete schema validation."
-      ]
-    },
-    {
-      "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/ManifestWalkthroughView.java",
-      "role": "added",
-      "reason": "Renders authored step descriptions, remembers comparison settings, and passes the full step list plus selected target to the diff opener. Keeps long explanation and file content in a width-tracking vertical scroll pane while leaving navigation controls fixed.",
-      "review_notes": [
-        "An individual file action must preserve all other files in its step.",
-        "WHY currently repeats the overall change intent; WORKFLOW EFFECT reports target count rather than a dedicated per-step explanation."
-      ]
-    },
-    {
-      "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/ManifestDiffOpener.java",
-      "role": "added",
-      "reason": "Creates the ordered lazy diff chain and opens StepDiffDialog, where every step target is explicitly listed beside the selected diff.",
-      "review_notes": [
-        "Check selected index, reference order, repeated targets, and per-producer errors."
-      ]
-    },
-    {
-      "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/ManifestWalkthroughToolWindowFactory.java",
-      "role": "added",
-      "reason": "Attaches the walkthrough component to the registered aMazePR tool window.",
-      "review_notes": []
-    },
-    {
-      "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/ParsedWalkthrough.java",
-      "role": "added",
-      "reason": "Carries the parsed title, intent, diagnostics, and ordered steps from parser to view.",
-      "review_notes": []
-    },
-    {
-      "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/WalkthroughContent.java",
-      "role": "added",
-      "reason": "Carries loaded, missing, and error results so loading failures can reach the view.",
-      "review_notes": []
-    },
-    {
-      "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/WalkthroughMarkdownParser.java",
-      "role": "added",
-      "reason": "Retains the older Markdown-to-step parsing path alongside the active JSON consumer.",
-      "review_notes": [
-        "Its file parsing is not fully compatible with the renderer's labeled range syntax; do not rely on it for parity."
-      ]
-    },
-    {
-      "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/WalkthroughStep.java",
-      "role": "added",
-      "reason": "Keeps step number, explanation, and file targets together when rendering and opening a diff group.",
-      "review_notes": []
-    },
-    {
-      "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/WorkflowFileReference.java",
-      "role": "added",
-      "reason": "Carries a path, optional inclusive range, and readable label through parser, view, and diff opening.",
-      "review_notes": [
-        "Two references to the same path can still represent different code targets."
-      ]
-    },
-    {
-      "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/GitDiffComparison.java",
-      "role": "added",
-      "reason": "Loads local or merge-base snapshots, pairs detected renames, distinguishes absent content, and surfaces Git/read failures.",
-      "review_notes": [
-        "PR content is committed HEAD; local edits appear only in Working tree mode.",
-        "Each lazy file load resolves commits again; the whole group is not frozen to a single checkout snapshot."
-      ]
-    },
-    {
-      "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/DiffLineRange.java",
-      "role": "added",
-      "reason": "Converts one-based inclusive targets to bounded editor indices for empty, short, or changed files.",
-      "review_notes": [
-        "Clamping prevents invalid indices but cannot establish that a target still refers to the intended code."
-      ]
-    },
-    {
-      "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/ManifestDiffRangeExtension.java",
-      "role": "added",
-      "reason": "Reveals folded target text and selects its range after diff calculation for aMazePR-tagged requests.",
-      "review_notes": [
-        "Deleted-file targets use the old side; other targets use the new side.",
-        "Live visual selection and focus remain unverified."
-      ]
-    },
-    {
-      "path": "plugin/pycharm/src/diffTest/java/dev/amazepr/plugin/DiffNavigationTest.java",
-      "role": "added",
-      "reason": "Checks native chain membership against the actual manifest and tests Git snapshots and line bounds in temporary repositories. Exercises the real Swing sidebar on the event dispatch thread, including every manifest step, clicked target, button boundaries, and callback suppression during selection sync.",
-      "review_notes": [
-        "The check count depends on manifest references; these are standalone checks, not live IDE UI tests."
-      ]
-    },
-    {
-      "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/StepDiffPanel.java",
-      "role": "added",
-      "reason": "Shows all step targets in a persistent sidebar and routes list clicks and Previous/Next file buttons to diff producer indices.",
-      "review_notes": [
-        "Programmatic selection sync must not trigger another load. The file list remains present even when a producer shows an error."
-      ]
-    },
-    {
-      "path": "plugin/pycharm/src/main/java/dev/amazepr/plugin/StepDiffDialog.java",
-      "role": "added",
-      "reason": "Owns the native diff processor beside the explicit file list, synchronizes selection, and disposes the processor when the window closes.",
-      "review_notes": [
-        "The sidebar and native toolbar must agree on the selected producer; the initial clicked index must be retained."
-      ]
     }
   ],
   "verification": {
@@ -672,76 +90,32 @@
       {
         "command": "python -m unittest discover -s tests",
         "status": "passed",
-        "evidence": "Ran 15 Python tests successfully after the scrolling change and manifest update."
+        "evidence": "All 15 existing tests passed."
       },
       {
-        "command": "python tools/change_manifest_verify.py --manifest .change-manifest/manifest.json --format json --warnings-as-errors",
+        "command": "python - (inline demo smoke checks)",
         "status": "passed",
-        "evidence": "Strict verification returned ok true with no diagnostics, including coverage of staged, unstaged, and untracked repository changes."
-      },
-      {
-        "command": "python tools/change_manifest_walkthrough.py --manifest .change-manifest/manifest.json --output .change-manifest/walkthrough.md",
-        "status": "passed",
-        "evidence": "Regenerated Markdown successfully. A direct comparison confirmed all 11 step descriptions survive rendering; all 41 inventory files appear in the review workflow and every source target is in bounds."
-      },
-      {
-        "command": ".tools/gradle-9.8.1/bin/gradle.bat -p plugin/pycharm check buildPlugin",
-        "status": "passed",
-        "evidence": "Passed 216 standalone checks, including actual Swing sidebar selection and Previous/Next actions for every manifest step. Packaged version 0.1.1; ZIP inspection confirmed both sidebar and dialog classes. This does not exercise live IDE processor integration."
+        "evidence": "Named and blank greetings; clamping below, inside, above and at bounds; equal and reversed bounds; slug punctuation and repeated separators all passed."
       }
     ],
     "manual_checks": [],
     "known_gaps": [
-      "The verifier implements protocol rules directly; it does not enforce the entire schema, validate line relevance, or judge explanation quality.",
-      "The Java parser has fewer checks than the Python verifier. The view's verified label refers only to that parser result.",
-      "Live PyCharm file selection, toolbar navigation, folding, and focus have not been manually rechecked for the updated plugin.",
-      "The view shows the richer description, but WHY still repeats overall intent and WORKFLOW EFFECT shows a file-target count.",
-      "CI uses --skip-diff and runs no plugin build or Java checks.",
-      "Illustrative manifests include hypothetical paths and sample test results; their validity is structural, and some prose needs editorial correction.",
-      "The legacy Markdown parser and older implementation-plan status notes lag behind the current JSON consumer.",
-      "Structure verification previously warned that the existing plugin ID contains pycharm. The build succeeded; the ID was retained for installed-plugin compatibility.",
-      "The scrollable card compiles with the local IDE, but live PyCharm scrolling with long text at narrow widths still requires a manual check.",
-      "The persistent sidebar is tested as a Swing component; native diff-processor integration and installation of 0.1.1 still need a live PyCharm check."
+      "The live PyCharm UI has not been exercised for this PR."
     ]
   },
   "risks": [
     {
-      "area": "Protocol and validator agreement",
-      "risk": "A producer can satisfy the schema while a consumer applies different checks or version rules.",
-      "mitigation": "Review schema, rule implementation, and diagnostics together; record the native-parser parity gap rather than claiming universal validation."
-    },
-    {
-      "area": "Review completeness",
-      "risk": "A first-file-only action can conceal other targets in the same step, and a file-level error can interrupt a review.",
-      "mitigation": "Use an ordered native chain for all references, retain the clicked index, and check chain membership against the actual manifest."
-    },
-    {
-      "area": "PR comparison context",
-      "risk": "A stale local target branch or changing checkout can make separate file comparisons use an unintended baseline.",
-      "mitigation": "Fetch the base before review, inspect commit labels, and keep the checkout stable while navigating lazy file comparisons. Group-wide pinning remains a gap."
-    },
-    {
-      "area": "Code target accuracy",
-      "risk": "A valid but stale line range can select unrelated text; folding and focus behavior depend on IDE APIs.",
-      "mitigation": "Derive targets from the inspected final file, clamp editor bounds, and perform the remaining live UI checks."
-    },
-    {
-      "area": "Evidence scope",
-      "risk": "Sample test evidence, local build results, and parser diagnostics can be mistaken for proof of the whole workflow.",
-      "mitigation": "Keep illustrative samples, observed command results, and unverified UI behavior explicit in steps and verification gaps."
+      "area": "Demo usage",
+      "risk": "These small examples could be mistaken for production utilities; slugify drops non-ASCII characters.",
+      "mitigation": "Keep the functions in demo/ and document their exact behavior."
     }
   ],
   "agent_notes": {
     "assumptions": [
-      "This manifest covers the entire initial uncommitted foundation, not only the latest skill edit. Most source files remain untracked.",
-      "The current code targets describe working-tree files. PR mode requires a manifest whose targets match committed HEAD, or old-side content for deletions.",
-      "Local PyCharm 2024.3 and workspace JDK/Gradle are build inputs; they are not distributed source."
+      "The requested PR is a demonstration for guided diff review."
     ],
     "limitations": [
-      "The producer skill is repository-local and has not been installed globally.",
-      "No remote PR was created or published during this refresh.",
-      "This rewrite improves authored explanations within protocol 0.1; it does not change the schema, renderer, or plugin layout.",
-      "The skill-creator quick validator accepted the updated skill. That check validates skill structure, not the quality of future agent output."
+      "Existing uncommitted README changes are excluded from this PR."
     ]
   }
 }
