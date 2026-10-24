@@ -41,7 +41,7 @@ class ChangeManifestWalkthroughTest(unittest.TestCase):
 
         markdown = walkthrough.render_walkthrough(data, [])
 
-        self.assertIn("# Bootstrap open change-manifest protocol and PyCharm viewer", markdown)
+        self.assertTrue(markdown.startswith(f"# {data['change']['title']}\n"))
         self.assertIn("## Intent", markdown)
         self.assertIn("## Review Workflow", markdown)
         self.assertIn("## Files", markdown)
@@ -102,6 +102,7 @@ class ChangeManifestWalkthroughTest(unittest.TestCase):
 
         markdown = walkthrough.render_walkthrough(data, [])
 
+        self.assertTrue(markdown.startswith("# Line target test\n"))
         self.assertIn("`src/example.py:10-12` - Validation branch", markdown)
 
 
