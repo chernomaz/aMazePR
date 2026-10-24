@@ -7,7 +7,7 @@
   "change": {
     "title": "Test PR: three demo functions",
     "intent": "Provide a small real PR for trying the aMazePR guided diff viewer.",
-    "scope": "Three independent Python demo functions and their three-step review walkthrough.",
+    "scope": "Three independent Python demo functions, a guided review walkthrough, and a renderer regression test that supports changing manifest titles.",
     "non_goals": [
       "No changes to plugin or verifier behavior."
     ]
@@ -51,6 +51,19 @@
           "label": "Create an ASCII slug"
         }
       ]
+    },
+    {
+      "step": 4,
+      "title": "Verify rendering after the manifest changes",
+      "description": "The repository manifest now describes the demo PR, so the rendering test must compare the heading with the loaded title. A separate synthetic manifest retains a fixed expected title to verify rendering independently. Confirm both tests pass when the repository manifest changes.",
+      "files": [
+        {
+          "path": "tests/test_change_manifest_walkthrough.py",
+          "line": 38,
+          "end_line": 50,
+          "label": "Current manifest title assertion"
+        }
+      ]
     }
   ],
   "files": [
@@ -83,6 +96,14 @@
       "role": "modified",
       "reason": "Render the demo manifest as a readable Markdown walkthrough.",
       "review_notes": []
+    },
+    {
+      "path": "tests/test_change_manifest_walkthrough.py",
+      "role": "modified",
+      "reason": "Assert that rendering uses the current manifest title, replacing a hardcoded bootstrap title that caused this PR to fail CI.",
+      "review_notes": [
+        "The synthetic Line target test still checks a fixed expected heading, independently of the repository manifest."
+      ]
     }
   ],
   "verification": {
@@ -90,7 +111,7 @@
       {
         "command": "python -m unittest discover -s tests",
         "status": "passed",
-        "evidence": "All 15 existing tests passed."
+        "evidence": "All 15 tests pass after refreshing the demo manifest and replacing the obsolete title expectation."
       },
       {
         "command": "python - (inline demo smoke checks)",
